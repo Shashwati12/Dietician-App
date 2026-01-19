@@ -1,16 +1,23 @@
+import { useRouter } from 'expo-router';
+import { Eye, EyeOff, Leaf, Lock, Mail } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  TextInput,
   Alert,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Mail, Lock, Eye, EyeOff, Leaf } from 'lucide-react-native';
-import { saveData, getData } from '../utils/storage';
+import { getData, saveData } from '../utils/storage';
+
+type User = {
+  name?: string;
+  email: string;
+  phone?: string;
+  password: string;
+};
 
 const COLORS = {
   primary: '#6c412f',
@@ -29,33 +36,32 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const emailRegex = /\S+@\S+\.\S+/;
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email');
+      return;
+    }
 
     setIsLoading(true);
-    
     try {
-      const users = (await getData('users')) || [];
-      const user = users.find(
-        (u: any) => u.email === email && u.password === password
-      );
-
+      const users = (await getData<User[]>('users')) || [];
+      const user = users.find((u) => u.email === email && u.password === password);
       if (!user) {
         Alert.alert('Error', 'Invalid email or password');
-        setIsLoading(false);
         return;
       }
-
       await saveData('currentUser', user);
-
-      setIsLoading(false);
-      router.push('/(tabs)/' as any); // navigate to dashboard
+      router.replace('/(tabs)/' as any );
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Something went wrong during login');
+    } finally {
       setIsLoading(false);
     }
   };

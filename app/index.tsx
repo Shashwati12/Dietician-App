@@ -1,30 +1,23 @@
-import React, { useEffect } from 'react';
+// app/index.tsx
+import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useRouter } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 
+const COLORS = { background: '#f2e8df' };
 
-const COLORS = {
-  background: '#f2e8df',
-};
-
-export default function Index() {
+export default function Index(){
   const router = useRouter();
+  const ready = useFrameworkReady();
 
   useEffect(() => {
-    // Navigate to welcome screen after a brief delay
-    const timer = setTimeout(() => {
-      router.replace('/welcome');
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [router]);
+    if (!ready) return;
+    router.replace('/welcome');
+  }, [ready, router]);
 
   return <View style={styles.container} />;
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
 });

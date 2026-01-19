@@ -1,26 +1,28 @@
-import React from 'react';
+import { getData, saveData } from '@/utils/storage';
+import { useRouter } from 'expo-router';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  Switch,
-} from 'react-native';
-import { 
-  User, 
-  Settings, 
-  Bell, 
-  Shield, 
-  FileText, 
+  Bell,
+  ChevronRight,
+  FileText,
+  Globe,
   HelpCircle,
   LogOut,
-  ChevronRight,
   Moon,
-  Globe,
-  Smartphone
+  Settings,
+  Shield,
+  Smartphone,
+  User
 } from 'lucide-react-native';
+import React from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 const COLORS = {
   primary: '#6c412f',
@@ -32,15 +34,38 @@ const COLORS = {
 };
 
 export default function Profile() {
+  const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
+
+  React.useEffect(() => {
+    (async () => {
+      const dark = await getData<boolean>('darkMode');
+      const notify = await getData<boolean>('notificationsEnabled');
+      if (typeof dark === 'boolean') setDarkModeEnabled(dark);
+      if (typeof notify === 'boolean') setNotificationsEnabled(notify);
+    })();
+  }, []);
+
+  React.useEffect(() => {
+    saveData('darkMode', darkModeEnabled);
+  }, [darkModeEnabled]);
+
+  React.useEffect(() => {
+    saveData('notificationsEnabled', notificationsEnabled);
+  }, [notificationsEnabled]);
+
+  const handleLogout = async () => {
+    await saveData('currentUser', null);
+    router.replace('/login');
+  };
 
   const profileSections = [
     {
       title: 'Account',
       items: [
-        { icon: User, label: 'Personal Information', action: 'navigate' },
-        { icon: Shield, label: 'Privacy & Security', action: 'navigate' },
+        { icon: User, label: 'Personal Information', action: 'navigate' , route: '/profile/info'},
+        { icon: Shield, label: 'Privacy & Security', action: 'navigate' , route: '/profile/privacy'},
         { icon: Bell, label: 'Notifications', action: 'toggle', value: notificationsEnabled, onChange: setNotificationsEnabled },
       ],
     },
@@ -71,7 +96,9 @@ export default function Profile() {
 
   const renderSettingItem = (item: any) => {
     return (
-      <TouchableOpacity key={item.label} style={styles.settingItem}>
+      <TouchableOpacity key={item.label} style={styles.settingItem} disabled={item.action === 'toggle'} onPress={()=>{if(item.action === 'navigate' && item.route){
+        router.push(item.route);
+      }}}>
         <View style={styles.settingLeft}>
           <View style={styles.settingIcon}>
             <item.icon size={20} color={COLORS.primary} />
@@ -150,7 +177,7 @@ export default function Profile() {
         ))}
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <LogOut size={20} color="#dc2626" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>

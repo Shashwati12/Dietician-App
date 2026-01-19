@@ -1,17 +1,26 @@
+import { useRouter } from 'expo-router';
+import { Eye, EyeOff, Leaf, Lock, Mail, Phone, User } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  TextInput,
   Alert,
+  SafeAreaView,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { User, Mail, Lock, Eye, EyeOff, Leaf, Phone } from 'lucide-react-native';
-import { saveData, getData } from '../utils/storage';
+import { getData, saveData } from '../utils/storage';
+
+type UserType = {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+};
+
+const emailRegex = /\S+@\S+\.\S+/;
 
 const COLORS = {
   primary: '#6c412f',
@@ -26,21 +35,14 @@ const COLORS = {
 export default function Signup() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
+    name: '', email: '', phone: '', password: '', confirmPassword: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSignup = async () => {
@@ -50,38 +52,35 @@ export default function Signup() {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email');
+      return;
+    }
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
-
     if (password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters long');
       return;
     }
 
     setIsLoading(true);
-    
     try {
-      const users = (await getData('users')) || [];
-
-      if (users.some((u: any) => u.email === email)) {
+      const users = (await getData<UserType[]>('users')) || [];
+      if (users.some((u) => u.email === email)) {
         Alert.alert('Error', 'User with this email already exists');
-        setIsLoading(false);
         return;
       }
-
       users.push({ name, email, phone, password });
       await saveData('users', users);
-
-      setIsLoading(false);
       Alert.alert('Success', 'Account created successfully! Please log in.', [
-        { text: 'OK', onPress: () => router.push('/login' as any) },
+        { text: 'OK', onPress: () => router.replace('/login') },
       ]);
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Something went wrong while creating account.');
+    } finally {
       setIsLoading(false);
     }
   };
