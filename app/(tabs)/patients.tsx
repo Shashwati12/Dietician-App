@@ -1,31 +1,26 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
-  ScrollView,
   SafeAreaView,
   TextInput,
+  FlatList,
+  StyleSheet,
   Modal,
+  ScrollView
 } from 'react-native';
 import { User, Search, Plus, X, Calendar, FileText, Activity } from 'lucide-react-native';
+import { COLORS } from '@/components/constants/colors';
 
-const COLORS = {
-  primary: '#6c412f',
-  secondary: '#e6ccb2',
-  background: '#f2e8df',
-  white: '#ffffff',
-  text: '#2d1b14',
-  textLight: '#8b5a42',
-};
+type Constitution = 'Vata' | 'Pitta' | 'Kapha' | 'Mixed';
 
 interface Patient {
   id: string;
   name: string;
   age: number;
   gender: string;
-  constitution: 'Vata' | 'Pitta' | 'Kapha' | 'Mixed';
+  constitution: Constitution;
   phone: string;
   email: string;
   lastVisit: string;
@@ -33,59 +28,66 @@ interface Patient {
   status: 'active' | 'inactive';
 }
 
+const INITIAL_PATIENTS: Patient[] = [
+  {
+    id: '1',
+    name: 'Priya Singh',
+    age: 34,
+    gender: 'Female',
+    constitution: 'Pitta',
+    phone: '+91 9876543210',
+    email: 'priya@email.com',
+    lastVisit: '2024-01-15',
+    nextAppointment: '2024-01-22',
+    status: 'active',
+  },
+  {
+    id: '2',
+    name: 'Raj Kumar',
+    age: 42,
+    gender: 'Male',
+    constitution: 'Vata',
+    phone: '+91 9876543211',
+    email: 'raj@email.com',
+    lastVisit: '2024-01-10',
+    status: 'active',
+  },
+  {
+    id: '3',
+    name: 'Maya Patel',
+    age: 28,
+    gender: 'Female',
+    constitution: 'Kapha',
+    phone: '+91 9876543212',
+    email: 'maya@email.com',
+    lastVisit: '2024-01-08',
+    nextAppointment: '2024-01-20',
+    status: 'active',
+  },
+];
+
 export default function Patients() {
+  const [patients] = useState<Patient[]>(INITIAL_PATIENTS);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] =
+    useState<'All' | Constitution>('All');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
 
-  const patients: Patient[] = [
-    {
-      id: '1',
-      name: 'Priya Singh',
-      age: 34,
-      gender: 'Female',
-      constitution: 'Pitta',
-      phone: '+91 9876543210',
-      email: 'priya.singh@email.com',
-      lastVisit: '2024-01-15',
-      nextAppointment: '2024-01-22',
-      status: 'active',
-    },
-    {
-      id: '2',
-      name: 'Raj Kumar',
-      age: 42,
-      gender: 'Male',
-      constitution: 'Vata',
-      phone: '+91 9876543211',
-      email: 'raj.kumar@email.com',
-      lastVisit: '2024-01-10',
-      status: 'active',
-    },
-    {
-      id: '3',
-      name: 'Maya Patel',
-      age: 28,
-      gender: 'Female',
-      constitution: 'Kapha',
-      phone: '+91 9876543212',
-      email: 'maya.patel@email.com',
-      lastVisit: '2024-01-08',
-      nextAppointment: '2024-01-20',
-      status: 'active',
-    },
-    {
-      id: '4',
-      name: 'Arjun Sharma',
-      age: 38,
-      gender: 'Male',
-      constitution: 'Mixed',
-      phone: '+91 9876543213',
-      email: 'arjun.sharma@email.com',
-      lastVisit: '2023-12-20',
-      status: 'inactive',
-    },
-  ];
+  const filteredPatients = useMemo(() => {
+    return patients.filter((patient) => {
+      const matchesSearch =
+        patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        patient.constitution.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesFilter =
+        activeFilter === 'All'
+          ? true
+          : patient.constitution === activeFilter;
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [patients, searchQuery, activeFilter]);
 
   const getConstitutionColor = (constitution: string) => {
     switch (constitution) {
@@ -101,11 +103,6 @@ export default function Patients() {
         return '#6b7280';
     }
   };
-
-  const filteredPatients = patients.filter(patient =>
-    patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.constitution.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <SafeAreaView style={styles.container}>

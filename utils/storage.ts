@@ -1,37 +1,29 @@
-// utils/storage.ts
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-export const saveData = async (key: string, value: any) => {
+let AsyncStorage: any = null;
+if (Platform.OS !== 'web') {
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+}
+
+export async function saveData<T = unknown>(key: string, value: T): Promise<void> {
   try {
-    const jsonValue = JSON.stringify(value);
-    await AsyncStorage.setItem(key, jsonValue);
-  } catch (e) {
-    console.error('Error saving data:', e);
+    const serialized = JSON.stringify(value);
+    if (Platform.OS === 'web') {
+      localStorage.setItem(key, serialized);
+    } else {
+      await AsyncStorage.setItem(key, serialized);
+    }
+  } catch (error) {
+    console.error(`saveData error (${key})`, error);
   }
-};
+}
 
-export const getData = async (key: string) => {
+export async function getData<T = unknown>(key: string): Promise<T | null> {
   try {
-    const jsonValue = await AsyncStorage.getItem(key);
-    return jsonValue != null ? JSON.parse(jsonValue) : null;
-  } catch (e) {
-    console.error('Error reading data:', e);
+    const raw = Platform.OS === 'web' ? localStorage.getItem(key) : await AsyncStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch (error) {
+    console.error(`getData error (${key})`, error);
     return null;
   }
-};
-
-export const removeData = async (key: string) => {
-  try {
-    await AsyncStorage.removeItem(key);
-  } catch (e) {
-    console.error('Error removing data:', e);
-  }
-};
-
-export const clearAll = async () => {
-  try {
-    await AsyncStorage.clear();
-  } catch (e) {
-    console.error('Error clearing storage:', e);
-  }
-};
+}

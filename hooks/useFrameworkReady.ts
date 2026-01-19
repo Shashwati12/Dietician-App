@@ -1,4 +1,6 @@
-import { useEffect } from 'react';
+// hooks/useFrameworkReady.ts
+import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 
 declare global {
   interface Window {
@@ -6,8 +8,15 @@ declare global {
   }
 }
 
-export function useFrameworkReady() {
+export function useFrameworkReady(): boolean {
+  const [ready, setReady] = useState(false);
+
   useEffect(() => {
-    window.frameworkReady?.();
-  });
+    if (Platform.OS === 'web') {
+      window.frameworkReady?.();
+    }
+    setReady(true);
+  }, []);
+
+  return ready;
 }

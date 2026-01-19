@@ -1,79 +1,77 @@
+import { COLORS } from '@/components/constants/colors';
+import { Clock, Phone, Plus, User, Video, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
   Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
   TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { Clock, User, Video, Phone, Plus, X } from 'lucide-react-native';
 
-const COLORS = {
-  primary: '#6c412f',
-  secondary: '#e6ccb2',
-  background: '#f2e8df',
-  white: '#ffffff',
-  text: '#2d1b14',
-  textLight: '#8b5a42',
-};
+type AppointmentType = 'video' | 'voice' | 'in-person';
+type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
 
 interface Appointment {
   id: string;
   patientName: string;
   time: string;
-  type: 'video' | 'voice' | 'in-person';
-  status: 'scheduled' | 'completed' | 'cancelled';
+  type: AppointmentType;
+  status: AppointmentStatus;
   duration: string;
 }
 
+const INITIAL_APPOINTMENTS: Appointment[] = [
+  {
+    id: '1',
+    patientName: 'Priya Singh',
+    time: '09:00 AM',
+    type: 'video',
+    status: 'scheduled',
+    duration: '30 min',
+  },
+  {
+    id: '2',
+    patientName: 'Raj Kumar',
+    time: '10:30 AM',
+    type: 'voice',
+    status: 'scheduled',
+    duration: '45 min',
+  },
+];
+
 export default function Appointments() {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [appointments, setAppointments] =
+    useState<Appointment[]>(INITIAL_APPOINTMENTS);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [newAppointment, setNewAppointment] = useState({
     patientName: '',
     time: '',
-    type: 'video' as 'video' | 'voice' | 'in-person',
+    type: 'video' as AppointmentType,
   });
 
-  const appointments: Appointment[] = [
-    {
-      id: '1',
-      patientName: 'Priya Singh',
-      time: '09:00 AM',
-      type: 'video',
-      status: 'scheduled',
-      duration: '30 min',
-    },
-    {
-      id: '2',
-      patientName: 'Raj Kumar',
-      time: '10:30 AM',
-      type: 'voice',
-      status: 'scheduled',
-      duration: '45 min',
-    },
-    {
-      id: '3',
-      patientName: 'Maya Patel',
-      time: '02:00 PM',
-      type: 'in-person',
-      status: 'scheduled',
-      duration: '60 min',
-    },
-    {
-      id: '4',
-      patientName: 'Arjun Sharma',
-      time: '03:30 PM',
-      type: 'video',
-      status: 'completed',
-      duration: '30 min',
-    },
-  ];
+  const handleBookAppointment = () => {
+    if (!newAppointment.patientName || !newAppointment.time) return;
 
-  const getTypeIcon = (type: string) => {
+    const appointment: Appointment = {
+      id: Date.now().toString(),
+      patientName: newAppointment.patientName,
+      time: newAppointment.time,
+      type: newAppointment.type,
+      status: 'scheduled',
+      duration: '30 min',
+    };
+
+    setAppointments((prev) => [appointment, ...prev]);
+    setNewAppointment({ patientName: '', time: '', type: 'video' });
+    setShowBookingModal(false);
+  };
+
+  const getTypeIcon = (type: AppointmentType) => {
     switch (type) {
       case 'video':
         return Video;
@@ -95,12 +93,6 @@ export default function Appointments() {
       default:
         return '#6b7280';
     }
-  };
-
-  const handleBookAppointment = () => {
-    // Add booking logic here
-    setShowBookingModal(false);
-    setNewAppointment({ patientName: '', time: '', type: 'video' });
   };
 
   return (
